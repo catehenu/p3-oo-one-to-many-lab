@@ -11,10 +11,11 @@ def test_pet_init():
     pet = Pet("Fido", "dog")
     assert pet.name == "Fido"
     assert pet.pet_type == "dog"
+    assert pet.owner is None  # No owner initially
 
     owner = Owner("Jim")
     pet = Pet("Clifford", "dog", owner)
-    assert pet.owner == owner
+    assert pet.owner == owner  # Pet's owner should be set correctly
 
     Pet.all = []
 
@@ -79,4 +80,38 @@ def test_get_sorted_pets():
     pet3 = Pet("Whiskers", "cat", owner)
     pet4 = Pet("Jerry", "reptile", owner)
     
-    assert owner.get_sorted_pets() == [pet2, pet1, pet4, pet3]
+    sorted_pets = owner.get_sorted_pets()
+    assert sorted_pets == [pet2, pet1, pet4, pet3]   # Check that pets are sorted by name
+
+    Pet.all = []
+class Pet:
+    PET_TYPES = ['dog', 'cat', 'rodent', 'bird', 'reptile', 'exotic']
+    all = []  # To store all pet instances
+
+    def __init__(self, name, pet_type, owner=None):
+        if pet_type not in Pet.PET_TYPES:
+            raise Exception(f"Invalid pet type: {pet_type}")
+        self.name = name
+        self.pet_type = pet_type
+        self.owner = owner
+        # If an owner is provided, we should automatically add this pet to the owner's list
+        if owner:
+            owner.add_pet(self)
+        Pet.all.append(self)
+
+class Owner:
+    def __init__(self, name):
+        self.name = name
+        self._pets = []
+
+    def add_pet(self, pet):
+        if not isinstance(pet, Pet):
+            raise Exception("Only Pet objects can be added")
+        self._pets.append(pet)
+        pet.owner = self
+
+    def pets(self):
+        return self._pets
+
+    def get_sorted_pets(self):
+        return sorted(self._pets, key=lambda pet: pet.name)
